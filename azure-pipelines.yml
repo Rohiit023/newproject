@@ -25,5 +25,8 @@ steps:
   displayName: 'build container image'
 
 - script: |
-    docker run basilvarghese/myapp-frontend:latest
+    docker run -d basilvarghese/myapp-frontend:latest
   displayName: 'Run the application'
+- script: |
+    docker ps
+  displayname: 'Running container'   
