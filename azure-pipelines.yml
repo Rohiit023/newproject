@@ -27,6 +27,3 @@ steps:
 - script: |
     docker run -d basilvarghese/myapp-frontend:latest
   displayName: 'Run the application'
-- script: |
-    docker ps
-  displayname: 'Running container'   
