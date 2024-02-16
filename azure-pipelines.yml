@@ -1,0 +1,39 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+    npm run build
+  displayName: 'npm install and build'
+- script: |
+    docker build -t basilvarghese/myapp-frontend:$(Build.BuildId) . -f Dockerfile
+  displayName: 'build container image'
+
+- script: |
+    docker run -d basilvarghese/myapp-frontend:$(Build.BuildId)
+  displayName: 'Run the application'
+
+- script: |
+    docker ps
+  displayName: 'Verify the running container'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: dockerhub
+    repository: rohit023/myapp-frontend
+    command: 'push'
+    tags: '$(Build.BuildId)'
