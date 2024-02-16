@@ -21,9 +21,20 @@ steps:
   displayName: 'npm install and build'
 
 - script: |
-    docker build -t basilvarghese/myapp-frontend:latest . -f Dockerfile
+    docker build -t basilvarghese/myapp-frontend:$(Build.BuildId) . -f Dockerfile
   displayName: 'build container image'
 
 - script: |
-    docker run -d basilvarghese/myapp-frontend:latest
+    docker run -d basilvarghese/myapp-frontend:$(Build.BuildId)
   displayName: 'Run the application'
+
+- script: |
+    docker ps
+  displayName: 'Verify the running container'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: dockerhub
+    repository: rohit023/myapp-frontend
+    command: 'push'
+    tags: '$(Build.BuildId)'
