@@ -1,8 +1,3 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - main
 
@@ -19,21 +14,11 @@ steps:
     npm install
     npm run build
   displayName: 'npm install and build'
+
 - script: |
-    docker build -t basilvarghese/myapp-frontend:$(Build.BuildId) . -f Dockerfile
+    docker build -t basilvarghese/myapp-frontend:latest . -f Dockerfile
   displayName: 'build container image'
 
 - script: |
-    docker run -d basilvarghese/myapp-frontend:$(Build.BuildId)
+    docker run basilvarghese/myapp-frontend:latest
   displayName: 'Run the application'
-
-- script: |
-    docker ps
-  displayName: 'Verify the running container'
-
-- task: Docker@2
-  inputs:
-    containerRegistry: dockerhub
-    repository: rohit023/myapp-frontend
-    command: 'push'
-    tags: '$(Build.BuildId)'
