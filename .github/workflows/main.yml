@@ -1,0 +1,77 @@
+# Node.js
+# Build a general Node.js project with npm.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+pr:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    npm install
+    npm run build
+  displayName: 'npm install and build'
+
+- script: |
+    docker build -t devopschandu111/myapp-frontend:$(Build.BuildId) . -f Dockerfile
+  displayName: 'build container image'
+
+- script: |
+    docker run -d devopschandu111/myapp-frontend:$(Build.BuildId)
+  displayName: 'Run the application'
+
+- script: |
+    docker ps
+  displayName: 'Verify the running container'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: DockerHub
+    repository: devopschandu111/myapp-frontend
+    command: 'push'
+    tags: $(Build.BuildId)
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'gke-dev'
+    namespace: default
+    command: 'apply'
+    arguments: -f k8s/simple
+    
+- script: |
+    sleep 60
+  displayName: 'Wait for Load Balancer up'
+
+# - script: |
+#     sed -i "s/devopschandu111/myapp-frontend:latest/devopschandu111/myapp-frontend:$(Build.BuildId)/g" k8s/simple/frontend-deployment.yaml
+#     git config --global user.email "devopschandu111@gmail.com"
+#     git config --global user.name "chandu1"
+#     git config --global --add url."git@github.com:"
+#     git add .
+#     git commit -m "updated the deployment manifest with image name $(Build.BuildId) " --allow-empty
+#     git push -u origin HEAD:main  --force
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'gke-dev'
+    namespace: default
+    command: 'get'
+    arguments: service coit-frontend-lb
+
+# - task: Kubernetes@1
+#   inputs:
+#     connectionType: 'Kubernetes Service Connection'
+#     kubernetesServiceEndpoint: 'gke-dev'
+#     namespace: default
+#     command: 'set'
+#     arguments: image deployment coit-frontend-lb  devopschandu111/myapp-frontend=devopschandu111/myapp-frontend:$(Build.BuildId)
